@@ -18,7 +18,7 @@ class n_dbconn
 		else
 		{
 			self::$un = 'root';
-			self::$pwd = 'jackal';
+			self::$pwd = '';
 			self::$db = 'parshwa';
 			self::$host = 'localhost';
 		}

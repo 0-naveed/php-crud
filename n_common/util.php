@@ -25,7 +25,7 @@
 			$str = str_replace("\"","\\\"",$str);
 			$str = str_replace("`","\\`",$str);
 		}
-		function upload($fn,$path,$url,$allowedExts)//$fn = file field name
+		function upload($fn,$path,$url,$allowedExts,$allowedSize)//$fn = file field name
 		{
 			$mimes = simplexml_load_file('mimes.xml');
 			$newname = '';
@@ -72,58 +72,64 @@
 					}
 				}
 			}
-			if(in_array())
+			if(in_array($_FILES[$fn]["type"],$allowedMimes))
 			{
 				
-			}
-			if (
-				($_FILES[$fn]["size"] < 20000000)
-				&& in_array($extension, $allowedExts)
-			)
-			{
-				if ($_FILES[$fn]["error"] > 0)
-				{
-					$resp .= "File upload failed, with error: " . $_FILES[$fn]["error"] . "<br />";
-					$successful = '0';
-				}
-				else
-				{
-					$test = '';
-					$test .= "Upload: " . $_FILES[$fn]["name"] . "<br />";
-					$test .= "Type: " . $_FILES[$fn]["type"] . "<br />";
-					$test .= "Size: " . ($_FILES[$fn]["size"] / 1024) . " Kb<br />";
-					$test .= "Temp file: " . $_FILES[$fn]["tmp_name"] . "<br />";
-					if(function_exists('name_allot'))
-					{
-						
-					}
-					else
-					{
-						function name_allot($fn,$extension)
-						{
-							$name = str_replace('.' . $extension,'',$fn);
-							$i=2;
-							$newname=$fn;
-							$num = 2;
-							while (file_exists("uploaded/" . $newname))
-							{
-								(string)$newname = (string)$name . (string)$num . '.' . (string)$extension;	
-								(int)$num = (int)$num + 1;
-							}
-							return $newname;
-						}
-					}
-					$newname = name_allot($_FILES[$fn]["name"],$extension);
-					move_uploaded_file($_FILES[$fn]["tmp_name"],"uploaded/" . $newname);
-					$resp .= "Uploaded File Link: <a href='" . $url . $newname . "' >Filelink</a>";
-					chmod("uploaded/" . $newname,0755);
-				}
 			}
 			else
 			{
 				$successful = '0';
-				$resp .= "File upload failed, did not match criteria";
+				$resp .= "This file type does not appear to be an allowed type.";
+				return array($successful,$resp,$newname);
 			}
+			if(in_array($extension, $allowedExts))
+			{
+				
+			}
+			else
+			{
+				$successful = '0';
+				$resp .= "This file type is not allowed.";
+				return array($successful,$resp,$newname);
+			}
+			if($_FILES[$fn]["size"] < $allowedSize)
+			{
+				
+			}
+			else
+			{
+				$successful = '0';
+				$resp .= "File Size Too Large.";
+				return array($successful,$resp,$newname);
+			}
+			if ($_FILES[$fn]["error"] > 0)
+			{
+				$resp .= "File upload failed, with error: " . $_FILES[$fn]["error"] . "<br />";
+				$successful = '0';
+				return array($successful,$resp,$newname);
+			}
+			$test = '';
+			$test .= "Upload: " . $_FILES[$fn]["name"] . "<br />";
+			$test .= "Type: " . $_FILES[$fn]["type"] . "<br />";
+			$test .= "Size: " . ($_FILES[$fn]["size"] / 1024) . " Kb<br />";
+			$test .= "Temp file: " . $_FILES[$fn]["tmp_name"] . "<br />";
+			function name_allot($fn,$extension)
+			{
+				$name = str_replace('.' . $extension,'',$fn);
+				$i=2;
+				$newname=$fn;
+				$num = 2;
+				while (file_exists("uploaded/" . $newname))
+				{
+					(string)$newname = (string)$name . (string)$num . '.' . (string)$extension;	
+					(int)$num = (int)$num + 1;
+				}
+				return $newname;
+			}
+			$newname = name_allot($_FILES[$fn]["name"],$extension);
+			move_uploaded_file($_FILES[$fn]["tmp_name"],"uploaded/" . $newname);
+			$resp .= "Uploaded File Link: <a href='" . $url . $newname . "' >Filelink</a>";
+			chmod("uploaded/" . $newname,0755);
 			return array($successful,$resp,$newname);
 		}
 	}
