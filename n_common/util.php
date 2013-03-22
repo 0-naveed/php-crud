@@ -25,9 +25,8 @@
 			$str = str_replace("\"","\\\"",$str);
 			$str = str_replace("`","\\`",$str);
 		}
-		function upload($fn,$path,$url,$allowedExts,$allowedSize)//$fn = file field name
+		static function upload($fn,$path,$url,$allowedExts,$allowedSize,$allowedMimes)//$fn = file field name
 		{
-			$mimes = simplexml_load_file('mimes.xml');
 			$newname = '';
 			$successful = '1';
 			$resp = '';
@@ -62,16 +61,6 @@
 			$file_parts = explode(".", $_FILES[$fn]["name"]);
 			$extension = end($file_parts);
 			$allowedsMimes = array();
-			foreach($allowedExts as $key=>$val)
-			{
-				foreach($mimes->mime_mapping as $key2=>$val2)
-				{
-					if($val2->extension == $val)
-					{
-						$allowedMimes[] = $val2->mime_type;
-					}
-				}
-			}
 			if(in_array($_FILES[$fn]["type"],$allowedMimes))
 			{
 				
@@ -79,7 +68,7 @@
 			else
 			{
 				$successful = '0';
-				$resp .= "This file type does not appear to be an allowed type.";
+				$resp .= "This file does not have the correct MIME type.";
 				return array($successful,$resp,$newname);
 			}
 			if(in_array($extension, $allowedExts))
@@ -89,7 +78,7 @@
 			else
 			{
 				$successful = '0';
-				$resp .= "This file type is not allowed.";
+				$resp .= "This file extension is not allowed.";
 				return array($successful,$resp,$newname);
 			}
 			if($_FILES[$fn]["size"] < $allowedSize)
@@ -119,7 +108,7 @@
 				$i=2;
 				$newname=$fn;
 				$num = 2;
-				while (file_exists("uploaded/" . $newname))
+				while (file_exists($upload_dir . "/" . $newname))
 				{
 					(string)$newname = (string)$name . (string)$num . '.' . (string)$extension;	
 					(int)$num = (int)$num + 1;
@@ -127,9 +116,13 @@
 				return $newname;
 			}
 			$newname = name_allot($_FILES[$fn]["name"],$extension);
-			move_uploaded_file($_FILES[$fn]["tmp_name"],"uploaded/" . $newname);
-			$resp .= "Uploaded File Link: <a href='" . $url . $newname . "' >Filelink</a>";
-			chmod("uploaded/" . $newname,0755);
+			if(move_uploaded_file($_FILES[$fn]["tmp_name"],"uploaded/" . $newname))
+			{
+				$resp .= "Uploaded File Link: <a href='" . $url . $newname . "' >Filelink</a>";
+				chmod("uploaded/" . $newname,0755);
+				return array($successful,$resp,$newname);
+			}
+			$successful = 0;
 			return array($successful,$resp,$newname);
 		}
 	}
